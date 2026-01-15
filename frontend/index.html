@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Downloader</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #334155;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --accent: #8b5cf6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-top: 20px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: var(--text-dim);
+        }
+
+        /* Download Box */
+        .download-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .url-input {
+            flex: 1;
+            min-width: 300px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 20px;
+            color: white;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .format-select {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 20px;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .btn-download {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 14px 28px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-download:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-download:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Progress Card */
+        #progress-container {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .progress-card {
+            background: var(--card-bg);
+            border-left: 4px solid var(--primary);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .progress-bar-bg {
+            height: 10px;
+            background: var(--bg);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 500;
+            background: var(--primary);
+            opacity: 0.9;
+        }
+
+        /* Files List */
+        .files-section {
+            margin-top: 40px;
+        }
+
+        .files-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .files-table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        th {
+            text-align: left;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-dim);
+            font-weight: 500;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border);
+            font-size: 0.95rem;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .file-name {
+            font-weight: 500;
+            max-width: 400px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-info {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-icon {
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .btn-download-file:hover {
+            color: var(--success);
+            border-color: var(--success);
+            background: rgba(34, 197, 94, 0.1);
+        }
+
+        .btn-delete:hover {
+            color: var(--danger);
+            border-color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* Modal / Toast Mock */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            transform: translateY(100px);
+            transition: transform 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .input-group {
+                flex-direction: column;
+            }
+
+            .url-input,
+            .format-select,
+            .btn-download {
+                width: 100%;
+            }
+
+            .file-name {
+                max-width: 200px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Video Downloader Pro</h1>
+            <p>Baixe vídeos e áudios com um clique</p>
+        </header>
+
+        <main>
+            <section class="download-box">
+                <div class="input-group">
+                    <input type="text" id="url" class="url-input" placeholder="Cole o link do YouTube aqui..."
+                        autocomplete="off">
+                    <select id="format" class="format-select">
+                        <option value="mp3">🎵 MP3 (Áudio)</option>
+                        <option value="mp4">🎬 MP4 (Vídeo)</option>
+                    </select>
+                    <button id="download-btn" class="btn-download">
+                        <span>Baixar</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                    </button>
+                </div>
+
+                <div id="progress-container">
+                    <div class="progress-card">
+                        <div class="progress-header">
+                            <div>
+                                <span class="status-badge" id="status-text">Aguardando...</span>
+                                <div id="progress-detail"
+                                    style="font-size: 0.85rem; margin-top: 5px; color: var(--text-dim);"></div>
+                            </div>
+                            <span id="percent-text" style="font-weight: 600;">0%</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div id="progress-bar" class="progress-bar-fill"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="files-section">
+                <div class="files-header">
+                    <h2>Downloads Recentes</h2>
+                    <div style="display: flex; gap: 10px;">
+                        <button id="download-all-btn" class="btn-icon btn-download-file" title="Baixar Todos"
+                            style="display: none; background: rgba(99, 102, 241, 0.1); border-color: var(--primary);">
+                            <span style="font-size: 0.85rem; font-weight: 500; margin-right: 5px;">Baixar Todos</span>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </button>
+                        <button id="delete-all-btn" class="btn-icon btn-delete" title="Excluir Todos"
+                            style="display: none;">
+                            <span style="font-size: 0.85rem; font-weight: 500; margin-right: 5px;">Excluir Todos</span>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path
+                                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                </path>
+                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
+                        </button>
+                        <button class="btn-icon" onclick="loadFiles()" title="Atualizar Lista">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M23 4v6h-6"></path>
+                                <path d="M1 20v-6h6"></path>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="files-table-container">
+                    <table id="files-list">
+                        <thead>
+                            <tr>
+                                <th>Arquivo</th>
+                                <th>Tamanho / Data</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Arquivos serão inseridos aqui -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // Configurações
+        const API = {
+            files: '/api/files',
+            download: '/api/download',
+            delete: '/api/delete',
+            progress: '/api/progress',
+            storage: '/downloads'
+        };
+
+        // Elementos DOM
+        const urlInput = document.getElementById('url');
+        const formatSelect = document.getElementById('format');
+        const downloadBtn = document.getElementById('download-btn');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const statusText = document.getElementById('status-text');
+        const percentText = document.getElementById('percent-text');
+        const progressDetail = document.getElementById('progress-detail');
+        const filesBody = document.querySelector('#files-list tbody');
+        const deleteAllBtn = document.getElementById('delete-all-btn');
+        const downloadAllBtn = document.getElementById('download-all-btn');
+
+        // Estado Global
+        let isDownloading = false;
+        let hasStarted = false; // Flag para evitar reset prematuro por mensagens 'idle'
+        let currentFiles = [];
+
+        // Iniciar
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFiles();
+            setupSSE();
+        });
+
+        // Botão de Download
+        downloadBtn.addEventListener('click', async () => {
+            const url = urlInput.value.trim();
+            if (!url) return showToast('Por favor, insira uma URL válida', 'danger');
+
+            try {
+                isDownloading = true;
+                hasStarted = false; // Reiniciar flag
+                downloadBtn.disabled = true;
+                progressContainer.style.display = 'block';
+                resetProgress();
+
+                console.log('Iniciando download:', { url, format: formatSelect.value });
+                const response = await fetch(API.download, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url, format: formatSelect.value })
+                });
+
+                if (!response.ok) {
+                    const errorMsg = `Erro ${response.status}: Falha ao iniciar download no servidor`;
+                    throw new Error(errorMsg);
+                }
+
+                showToast('Download iniciado com sucesso!');
+                urlInput.value = '';
+            } catch (err) {
+                console.error('Erro no download:', err);
+                showToast(err.message, 'danger');
+                isDownloading = false;
+                downloadBtn.disabled = false;
+            }
+        });
+
+        // Botão Deletar Todos
+        deleteAllBtn.addEventListener('click', async () => {
+            if (currentFiles.length === 0) return;
+            if (!confirm(`Deseja realmente excluir TODOS os ${currentFiles.length} arquivos? Esta ação é irreversível.`)) return;
+
+            deleteAllBtn.disabled = true;
+            let count = 0;
+            let errors = 0;
+
+            for (const file of currentFiles) {
+                try {
+                    const res = await fetch(API.delete, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: file.name })
+                    });
+                    if (res.ok) count++; else errors++;
+                } catch {
+                    errors++;
+                }
+            }
+
+            if (errors > 0) {
+                showToast(`Excluídos ${count} arquivos. Erro em ${errors}.`, 'danger');
+            } else {
+                showToast(`Todos os ${count} arquivos foram excluídos.`);
+            }
+
+            deleteAllBtn.disabled = false;
+            loadFiles();
+        });
+
+        // Botão Baixar Todos
+        downloadAllBtn.addEventListener('click', () => {
+            if (currentFiles.length === 0) return;
+
+            showToast(`Iniciando download de ${currentFiles.length} arquivos...`);
+
+            currentFiles.forEach((file, index) => {
+                // Pequeno delay para evitar que o browser bloqueie múltiplos downloads
+                setTimeout(() => {
+                    const a = document.createElement('a');
+                    a.href = `${API.storage}/${file.name}`;
+                    a.download = file.name;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                }, index * 500);
+            });
+        });
+
+        // Event Source (Progress)
+        function setupSSE() {
+            const ev = new EventSource(API.progress);
+
+            ev.onmessage = (e) => {
+                const line = e.data.trim();
+                if (!line) return;
+
+                // Se o backend enviar 'idle', verificamos se já tínhamos começado algo
+                if (line === 'idle') {
+                    if (isDownloading && hasStarted) {
+                        console.log('Recebido idle após progresso: finalizando.');
+                        finishDownload();
+                    }
+                    return;
+                }
+
+                // Qualquer outra mensagem que não seja idle ou vazia indica que o processo começou
+                if (line.includes('[') || line.includes('%')) {
+                    hasStarted = true;
+                }
+
+                // Parsing básico do yt-dlp
+                if (line.includes('[download]') && line.includes('%')) {
+                    const matchPercent = line.match(/(\d+\.\d+)%/);
+                    if (matchPercent) {
+                        const p = matchPercent[1];
+                        updateProgress(p, 'Baixando...');
+                        progressDetail.textContent = line.split('[download]')[1].trim();
+                    }
+                } else if (line.includes('[ffmpeg]') || line.includes('[ExtractAudio]')) {
+                    updateProgress(99, 'Processando...');
+                    progressDetail.textContent = 'Convertendo arquivo...';
+                }
+            };
+
+            ev.addEventListener('finished', () => {
+                finishDownload();
+            });
+
+            ev.onerror = () => {
+                // Silencioso se estiver tudo bem, reconecta automático
+            };
+        }
+
+        function finishDownload() {
+            if (!isDownloading) return;
+
+            isDownloading = false;
+            updateProgress(100, 'Finalizado!');
+            downloadBtn.disabled = false;
+            showToast('Download concluído!');
+
+            setTimeout(() => {
+                progressContainer.style.display = 'none';
+                loadFiles();
+            }, 3000);
+        }
+
+        function updateProgress(percent, msg) {
+            progressBar.style.width = `${percent}%`;
+            percentText.textContent = `${Math.round(percent)}%`;
+            statusText.textContent = msg;
+        }
+
+        function resetProgress() {
+            progressBar.style.width = '0%';
+            percentText.textContent = '0%';
+            statusText.textContent = 'Aguardando...';
+            progressDetail.textContent = '';
+        }
+
+        // Listagem de Arquivos
+        async function loadFiles() {
+            try {
+                const res = await fetch(API.files);
+                const filenames = await res.json();
+
+                // Buscar metadados (HEAD) para cada arquivo
+                const filePromises = filenames.map(async (name) => {
+                    try {
+                        const meta = await fetch(`${API.storage}/${name}`, { method: 'HEAD' });
+                        return {
+                            name,
+                            size: meta.headers.get('content-length'),
+                            date: meta.headers.get('last-modified')
+                        };
+                    } catch {
+                        return { name, size: null, date: null };
+                    }
+                });
+
+                currentFiles = await Promise.all(filePromises);
+
+                // Ordenar por data (mais recente primeiro)
+                currentFiles.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                // Mostrar/esconder botões de ação em massa
+                const hasFiles = currentFiles.length > 0;
+                deleteAllBtn.style.display = hasFiles ? 'flex' : 'none';
+                downloadAllBtn.style.display = hasFiles ? 'flex' : 'none';
+
+                renderFiles(currentFiles);
+            } catch (err) {
+                console.error('Erro ao listar arquivos', err);
+            }
+        }
+
+        function renderFiles(files) {
+            filesBody.innerHTML = files.map(f => `
+                <tr>
+                    <td>
+                        <div class="file-name" title="${f.name}">${f.name}</div>
+                    </td>
+                    <td>
+                        <div class="file-info">${formatSize(f.size)}</div>
+                        <div class="file-info" style="font-size: 0.75rem;">${formatDate(f.date)}</div>
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <a href="${API.storage}/${f.name}" class="btn-icon btn-download-file" download title="Download">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            </a>
+                            <button onclick="confirmDelete('${f.name}')" class="btn-icon btn-delete" title="Excluir">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function confirmDelete(filename) {
+            if (!confirm(`Deseja realmente excluir "${filename}"?`)) return;
+
+            try {
+                const res = await fetch(API.delete, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: filename })
+                });
+
+                if (res.ok) {
+                    showToast('Arquivo excluído');
+                    loadFiles();
+                }
+            } catch (err) {
+                showToast('Erro ao excluir', 'danger');
+            }
+        }
+
+        // Helpers
+        function formatSize(bytes) {
+            if (!bytes) return '--';
+            const mb = bytes / (1024 * 1024);
+            return `${mb.toFixed(2)} MB`;
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '--';
+            const d = new Date(dateStr);
+            return d.toLocaleString('pt-BR');
+        }
+
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.style.borderColor = type === 'danger' ? 'var(--danger)' : 'var(--primary)';
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+
+</html>
