@@ -1,0 +1,5 @@
+downloads/
+*.pyc
+__pycache__/
+www.youtube.com_cookies.txt
+www.tiktok.com_cookies.txt

@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  api-yt-dlp:
+    build: ./api
+    volumes:
+      - ./downloads:/downloads
+      - ./api/app.py:/app/app.py
+      - ./www.tiktok.com_cookies.txt:/app/www.tiktok.com_cookies.txt
+      - ./www.youtube.com_cookies.txt:/app/www.youtube.com_cookies.txt
+    restart: unless-stopped
+    networks:
+     - packtudo_default
+#volumes:
+#  downloads:
+networks:
+  packtudo_default:
+    external: true
