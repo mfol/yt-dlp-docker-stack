@@ -1,6 +1,7 @@
 name: Deploy ytdlp api
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
