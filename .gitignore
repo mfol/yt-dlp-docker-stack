@@ -3,3 +3,7 @@ downloads/
 __pycache__/
 www.youtube.com_cookies.txt
 www.tiktok.com_cookies.txt
+
+# cookies gerenciados pela UI (volume gravavel) — nunca versionar
+cookies/*
+!cookies/.gitkeep

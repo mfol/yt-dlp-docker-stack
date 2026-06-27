@@ -8,7 +8,14 @@ RUN apt update && \
 WORKDIR /app
 COPY app.py .
 
-ENV DOWNLOAD_DIR=/downloads
+ENV DOWNLOAD_DIR=/downloads \
+    COOKIES_DIR=/cookies \
+    FRONTEND_DIR=/app/frontend \
+    MAX_WORKERS=2
 
 EXPOSE 5000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD curl -fsS http://localhost:5000/healthz || exit 1
+
 CMD ["python", "app.py"]

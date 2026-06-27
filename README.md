@@ -1,66 +1,85 @@
 # yt-dlp Stack (Docker)
 
-API Flask + frontend simples para baixar videos/audio com `yt-dlp`, rodando em Docker.
+API Flask + frontend (Tailwind, mobile-first) para baixar video/audio com `yt-dlp`.
 
-## O que foi ajustado
+## Destaques
 
-Foram aplicadas melhorias para reduzir falhas no YouTube (especialmente Shorts) dentro do container:
+- **Frontend mobile-first** (Tailwind via CDN), tema escuro, 3 abas: **Baixar**, **Cookies** e **Manual**.
+- **Aba Manual embutida** — explica fluxo, URLs suportadas, cookies e todas as APIs direto na UI.
+- **Gerenciador de cookies pela UI** — renove cookies sem redeploy. Mostra saude
+  (ativo / expirando / expirado) e dias restantes por plataforma; cola texto ou
+  envia arquivo `.txt`; botao **Testar** valida se o cookie ainda autentica.
+- **Jobs com ID + progresso por job** (SSE), multiplos downloads em paralelo (`MAX_WORKERS`).
+- **Seguranca**: path traversal bloqueado em download/delete, validacao de formato e cookie.
+- **APIs legadas mantidas** (clientes antigos seguem funcionando), marcadas com header `Deprecation`.
 
-- Runtime do container atualizado em `api/Dockerfile`:
-  - instalacao de `nodejs`, `ffmpeg`, `curl` e `ca-certificates`
-  - upgrade de `yt-dlp` e `flask`
-  - limpeza de cache do `apt`
-- Ajustes de download em `api/app.py`:
-  - `DOWNLOAD_DIR` via variavel de ambiente (`DOWNLOAD_DIR`) com fallback `/downloads`
-  - adicao de `--no-playlist` e `--newline`
-  - suporte a URLs `youtube.com` e `youtu.be`
-  - adicao de extractor args para YouTube: `youtube:player_client=web,android,tv`
-  - formato de video alterado para `bv*+ba/b` com merge para `mp4`
-- Seguranca/repositorio:
-  - criado `.gitignore` para nao versionar cookies e pasta de downloads
-
-## Estrutura
-
-- `api/app.py`: API Flask que enfileira e executa downloads
-- `api/Dockerfile`: imagem da API
-- `docker-compose.yml`: orquestracao local
-- `frontend/`: interface web
-- `downloads/`: arquivos gerados (nao versionados)
-
-## Subir no Docker
+## Subir
 
 ```bash
 docker compose up -d --build
 ```
 
-## Cookies (local, nao versionar)
+Frontend em `/`, API sob `/api` (via proxy). Health: `/healthz`.
 
-Crie estes arquivos na raiz do projeto (mesmo nivel do `docker-compose.yml`):
+## Cookies (a parte facil agora)
 
-- `www.youtube.com_cookies.txt`
-- `www.tiktok.com_cookies.txt`
+1. Abra a aba **Cookies** na UI.
+2. Exporte com a extensao **"Get cookies.txt LOCALLY"** (formato Netscape) na plataforma logada.
+3. Cole o conteudo (ou anexe o `.txt`) no card da plataforma → **Salvar cookie**.
+4. (Opcional) **Testar** para confirmar.
 
-Formato: Netscape cookie file.
+Cookies ficam no volume gravavel `./cookies/<plataforma>.txt` (nunca versionado).
+Deploys antigos com `www.youtube.com_cookies.txt` / `www.tiktok.com_cookies.txt`
+continuam como fallback read-only.
 
-## Atualizar projeto no Raspberry Pi (sem git anterior)
+Plataformas: YouTube, TikTok, Instagram (adicionar mais = 1 entrada em `PLATFORMS` no `api/app.py`).
 
-Opcao recomendada: backup + clone limpo.
+## API
+
+### Novas (recomendadas) — prefixo `/api`
+| Metodo | Rota | Descricao |
+|--------|------|-----------|
+| GET | `/healthz` | status, versao do yt-dlp, fila |
+| GET | `/platforms` | plataformas suportadas |
+| POST | `/download` | `{url, format}` → `{status, job_id}` |
+| GET | `/jobs` | lista de jobs |
+| GET | `/jobs/<id>` | 1 job |
+| GET | `/jobs/<id>/events` | SSE por job (emite `finished` / `error`) |
+| GET | `/files` | lista de arquivos |
+| DELETE | `/files/<name>` | apaga arquivo |
+| GET | `/cookies` | status de todos os cookies |
+| PUT | `/cookies/<platform>` | salva cookie (texto cru, `{content}` json, ou multipart `file`) |
+| DELETE | `/cookies/<platform>` | remove cookie |
+| POST | `/cookies/<platform>/test` | testa autenticacao |
+
+### Legadas (DEPRECATED, ainda funcionam)
+`POST /download` · `GET /progress` (SSE global) · `GET /files` · `GET /download-file/<name>` · `POST /delete {name}`
+— respondem com header `Deprecation: true` + `Link` para a sucessora.
+
+## Variaveis de ambiente
+
+| Var | Default | Descricao |
+|-----|---------|-----------|
+| `DOWNLOAD_DIR` | `/downloads` | saida dos arquivos |
+| `COOKIES_DIR` | `/cookies` | cookies gerenciados (gravavel) |
+| `MAX_WORKERS` | `2` | downloads simultaneos |
+| `COOKIE_WARN_DAYS` | `7` | dias p/ marcar cookie como "expirando" |
+| `CORS_ORIGINS` | (vazio) | `*` ou csv de origens permitidas |
+| `FRONTEND_DIR` | `/app/frontend` | onde servir o `index.html` |
+
+## Atualizar no Raspberry Pi
 
 ```bash
-sudo apt update && sudo apt install -y git
 cd /caminho/pai/do/projeto
 mv yt-dlp-stack yt-dlp-stack_backup_$(date +%F_%H%M)
 git clone ssh://git@git.packtudo.com:2222/packtudo/yt-dlp.git yt-dlp-stack
 cd yt-dlp-stack
-```
-
-Depois, recoloque os arquivos de cookies e execute:
-
-```bash
 docker compose up -d --build
 ```
 
+Cookies agora pela UI — nao precisa recolocar arquivo manualmente (mas o fallback antigo segue valido).
+
 ## Observacoes
 
-- Se o YouTube mudar novamente os desafios de assinatura, mantenha o `yt-dlp` atualizado.
-- Arquivos de cookies contem sessao/autenticacao. Trate como segredo.
+- Mantenha `yt-dlp` atualizado (a imagem ja faz `--upgrade` no build).
+- Arquivos de cookies sao segredos — tratados como tal, fora do git.

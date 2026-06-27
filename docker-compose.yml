@@ -1,18 +1,29 @@
-version: "3.9"
-
 services:
   api-yt-dlp:
     build: ./api
+    environment:
+      DOWNLOAD_DIR: /downloads
+      COOKIES_DIR: /cookies
+      MAX_WORKERS: "2"
+      COOKIE_WARN_DAYS: "7"
+      # CORS_ORIGINS: "*"   # descomente se chamar a API de outra origem
     volumes:
       - ./downloads:/downloads
+      - ./cookies:/cookies                       # cookies GRAVAVEIS (renovar pela UI)
+      - ./frontend:/app/frontend:ro              # frontend servido em /
       - ./api/app.py:/app/app.py
-      - ./www.tiktok.com_cookies.txt:/app/www.tiktok.com_cookies.txt
-      - ./www.youtube.com_cookies.txt:/app/www.youtube.com_cookies.txt
+      # legados (read-only) — fallback de cookies para deploys antigos:
+      - ./www.tiktok.com_cookies.txt:/app/www.tiktok.com_cookies.txt:ro
+      - ./www.youtube.com_cookies.txt:/app/www.youtube.com_cookies.txt:ro
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:5000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     restart: unless-stopped
     networks:
-     - packtudo_default
-#volumes:
-#  downloads:
+      - packtudo_default
+
 networks:
   packtudo_default:
     external: true
