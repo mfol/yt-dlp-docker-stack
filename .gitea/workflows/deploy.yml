@@ -1,0 +1,32 @@
+name: Deploy ytdlp api
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login registry
+        run: |
+          echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login "${{ secrets.REGISTRY_URL }}" -u "${{ secrets.REGISTRY_USER }}" --password-stdin
+
+      - name: Build image
+        run: |
+          docker build -t "${{ secrets.REGISTRY_URL }}/packtudo/ytdlp-api:latest" ./api
+          docker tag "${{ secrets.REGISTRY_URL }}/packtudo/ytdlp-api:latest" "${{ secrets.REGISTRY_URL }}/packtudo/ytdlp-api:${{ gitea.sha }}"
+
+      - name: Push image
+        run: |
+          docker push "${{ secrets.REGISTRY_URL }}/packtudo/ytdlp-api:latest"
+          docker push "${{ secrets.REGISTRY_URL }}/packtudo/ytdlp-api:${{ gitea.sha }}"
+
+      - name: Trigger Coolify deploy
+        run: |
+          curl -fsSL -X GET "${{ secrets.COOLIFY_WEBHOOK }}"
