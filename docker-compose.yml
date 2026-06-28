@@ -1,6 +1,8 @@
 services:
   api-yt-dlp:
-    build: ./api
+    build:
+      context: .
+      dockerfile: api/Dockerfile
     environment:
       DOWNLOAD_DIR: /downloads
       COOKIES_DIR: /cookies

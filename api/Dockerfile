@@ -6,7 +6,9 @@ RUN apt update && \
     apt clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY app.py .
+# build context = raiz do repo (docker build -f api/Dockerfile .)
+COPY api/app.py .
+COPY frontend/ ./frontend/
 
 ENV DOWNLOAD_DIR=/downloads \
     COOKIES_DIR=/cookies \

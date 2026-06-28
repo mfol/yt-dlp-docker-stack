@@ -98,6 +98,20 @@ logger = logging.getLogger("ytdlp-api")
 
 app = Flask(__name__)
 
+
+def dual(rule, **opts):
+    """Registra a rota em bare (/foo) e sob /api (/api/foo).
+
+    - clientes legados batem via proxy que tira /api -> chega bare
+    - o frontend (mesmo container) chama /api/foo -> chega prefixado
+    Funciona com ou sem proxy de strip.
+    """
+    def deco(fn):
+        app.add_url_rule(rule, fn.__name__, fn, **opts)
+        app.add_url_rule("/api" + rule, "api_" + fn.__name__, fn, **opts)
+        return fn
+    return deco
+
 # --------------------------------------------------------------------------- #
 # Helpers: cookies
 # --------------------------------------------------------------------------- #
@@ -371,7 +385,7 @@ def _deprecate(resp, successor):
     return resp
 
 
-@app.route("/download", methods=["POST"])
+@dual("/download", methods=["POST"])
 def download():
     data = request.get_json(silent=True) or {}
     url = (data.get("url") or "").strip()
@@ -388,7 +402,7 @@ def download():
     return _deprecate(resp, "/api/jobs")
 
 
-@app.route("/progress")
+@dual("/progress")
 def progress():
     @stream_with_context
     def stream():
@@ -402,13 +416,13 @@ def progress():
     return _deprecate(resp, "/api/jobs/<id>/events")
 
 
-@app.route("/files")
+@dual("/files")
 def files():
     items = sorted(os.listdir(DOWNLOAD_DIR))
     return _deprecate(jsonify(items), "/api/files")
 
 
-@app.route("/download-file/<path:name>")
+@dual("/download-file/<path:name>")
 def download_file(name):
     path = safe_download_path(name)
     if not os.path.isfile(path):
@@ -416,7 +430,7 @@ def download_file(name):
     return send_from_directory(DOWNLOAD_DIR, name, as_attachment=True)
 
 
-@app.route("/delete", methods=["POST"])
+@dual("/delete", methods=["POST"])
 def delete():
     data = request.get_json(silent=True) or {}
     name = data.get("name")
@@ -434,7 +448,7 @@ def delete():
 # Rotas NOVAS (v2)
 # --------------------------------------------------------------------------- #
 
-@app.route("/healthz")
+@dual("/healthz")
 def healthz():
     return jsonify(
         status="ok",
@@ -451,7 +465,7 @@ def ytdlp_version():
         return "unknown"
 
 
-@app.route("/platforms")
+@dual("/platforms")
 def platforms():
     return jsonify([
         {"id": pid, "label": cfg["label"], "hosts": cfg["hosts"]}
@@ -459,14 +473,14 @@ def platforms():
     ])
 
 
-@app.route("/jobs")
+@dual("/jobs")
 def list_jobs():
     with jobs_lock:
         data = sorted(jobs.values(), key=lambda j: j["created_at"], reverse=True)
     return jsonify(data)
 
 
-@app.route("/jobs/<job_id>")
+@dual("/jobs/<job_id>")
 def get_job(job_id):
     job = jobs.get(job_id)
     if not job:
@@ -474,7 +488,7 @@ def get_job(job_id):
     return jsonify(job)
 
 
-@app.route("/jobs/<job_id>/events")
+@dual("/jobs/<job_id>/events")
 def job_events(job_id):
     job = jobs.get(job_id)
     if not job:
@@ -504,19 +518,19 @@ def job_events(job_id):
     return Response(stream(), mimetype="text/event-stream")
 
 
-@app.route("/cookies")
+@dual("/cookies")
 def cookies_list():
     return jsonify([cookie_status(p) for p in PLATFORMS])
 
 
-@app.route("/cookies/<platform>", methods=["GET"])
+@dual("/cookies/<platform>", methods=["GET"])
 def cookies_get(platform):
     if platform not in PLATFORMS:
         abort(404)
     return jsonify(cookie_status(platform))
 
 
-@app.route("/cookies/<platform>", methods=["PUT", "POST"])
+@dual("/cookies/<platform>", methods=["PUT", "POST"])
 def cookies_put(platform):
     if platform not in PLATFORMS:
         abort(404, description="plataforma desconhecida")
@@ -547,7 +561,7 @@ def cookies_put(platform):
     return jsonify(cookie_status(platform))
 
 
-@app.route("/cookies/<platform>", methods=["DELETE"])
+@dual("/cookies/<platform>", methods=["DELETE"])
 def cookies_delete(platform):
     if platform not in PLATFORMS:
         abort(404)
@@ -558,7 +572,7 @@ def cookies_delete(platform):
     return jsonify(cookie_status(platform))
 
 
-@app.route("/cookies/<platform>/test", methods=["POST"])
+@dual("/cookies/<platform>/test", methods=["POST"])
 def cookies_test(platform):
     if platform not in PLATFORMS:
         abort(404)
@@ -585,7 +599,7 @@ def cookies_test(platform):
         return jsonify(ok=False, has_cookie=ck is not None, message="timeout"), 504
 
 
-@app.route("/files/<path:name>", methods=["DELETE"])
+@dual("/files/<path:name>", methods=["DELETE"])
 def delete_file_v2(name):
     path = safe_download_path(name)
     if os.path.isfile(path):
@@ -606,6 +620,15 @@ def index():
     if os.path.isfile(os.path.join(FRONTEND_DIR, "index.html")):
         return send_from_directory(FRONTEND_DIR, "index.html")
     return jsonify(service="ytdlp-api", health="/healthz")
+
+
+@app.route("/downloads/<path:name>")
+def serve_download(name):
+    """Serve o arquivo baixado (GET/HEAD) — o frontend usa para link e metadados."""
+    path = safe_download_path(name)
+    if not os.path.isfile(path):
+        abort(404)
+    return send_from_directory(DOWNLOAD_DIR, name)
 
 
 if __name__ == "__main__":

@@ -20,7 +20,7 @@ jobs:
 
       - name: Build image
         run: |
-          docker build -t "${{ secrets.REGISTRY_URL }}/packtudo/ytdlp-api:latest" ./api
+          docker build -f api/Dockerfile -t "${{ secrets.REGISTRY_URL }}/packtudo/ytdlp-api:latest" .
           docker tag "${{ secrets.REGISTRY_URL }}/packtudo/ytdlp-api:latest" "${{ secrets.REGISTRY_URL }}/packtudo/ytdlp-api:${{ gitea.sha }}"
 
       - name: Push image
