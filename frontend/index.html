@@ -89,6 +89,24 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/></svg>
         </button>
       </div>
+      <!-- barra de seleção (aparece quando há arquivos) -->
+      <div id="sel-bar" class="mt-3 hidden items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
+        <label class="flex select-none items-center gap-2 text-sm text-slate-600">
+          <input type="checkbox" id="sel-all" class="h-4 w-4 rounded border-slate-300 accent-sky2-400" />
+          <span id="sel-count">Selecionar tudo</span>
+        </label>
+        <div id="sel-actions" class="hidden gap-2">
+          <button id="sel-dl" class="flex items-center gap-1.5 rounded-lg bg-sky2-400 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sky2-500 active:scale-95">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Baixar
+          </button>
+          <button id="sel-del" class="flex items-center gap-1.5 rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 active:scale-95">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Excluir
+          </button>
+        </div>
+      </div>
+
       <div id="files" class="mt-3 space-y-2"></div>
     </section>
 
@@ -338,6 +356,8 @@
     }
 
     /* ---------- files ---------- */
+    const selected = new Set();
+
     async function loadFiles() {
       try {
         const names = await (await fetch(`${API}/files`)).json();
@@ -347,9 +367,17 @@
           catch { return { n, size: 0, date: null }; }
         }));
         metas.sort((a, b) => new Date(b.date) - new Date(a.date));
+        selected.clear();
         const box = $('#files'); box.innerHTML = '';
-        if (!metas.length) { box.innerHTML = '<p class="rounded-xl border border-slate-200 bg-white p-4 text-center text-sm text-slate-400">Nenhum arquivo ainda</p>'; return; }
+        if (!metas.length) {
+          box.innerHTML = '<p class="rounded-xl border border-slate-200 bg-white p-4 text-center text-sm text-slate-400">Nenhum arquivo ainda</p>';
+          $('#sel-bar').classList.add('hidden');
+          return;
+        }
+        $('#sel-bar').classList.remove('hidden');
+        $('#sel-bar').classList.add('flex');
         metas.forEach(m => box.appendChild(fileRow(m)));
+        updateSelBar();
       } catch { toast('Erro ao listar', 'err'); }
     }
 
@@ -357,6 +385,7 @@
       const mb = size ? (size / 1048576).toFixed(1) + ' MB' : '--';
       const dt = date ? new Date(date).toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
       const row = el(`<div class="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3">
+        <input type="checkbox" class="rowcheck h-4 w-4 shrink-0 rounded border-slate-300 accent-sky2-400" />
         <div class="min-w-0 flex-1"><p class="truncate text-sm font-medium text-slate-700">${n}</p>
         <p class="text-xs text-slate-400">${mb} · ${dt}</p></div>
         <a href="/downloads/${encodeURIComponent(n)}" download class="grid h-9 w-9 place-items-center rounded-lg border border-slate-200 text-slate-500 hover:border-emerald-300 hover:text-emerald-600">
@@ -364,13 +393,66 @@
         <button class="del grid h-9 w-9 place-items-center rounded-lg border border-slate-200 text-slate-500 hover:border-rose-300 hover:text-rose-600">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
       </div>`);
+      const check = row.querySelector('.rowcheck');
+      check.onchange = () => {
+        check.checked ? selected.add(n) : selected.delete(n);
+        row.classList.toggle('ring-2', check.checked);
+        row.classList.toggle('ring-sky2-300', check.checked);
+        updateSelBar();
+      };
       row.querySelector('.del').onclick = async () => {
         if (!confirm(`Excluir "${n}"?`)) return;
-        const r = await fetch(`${API}/delete`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: n }) });
-        if (r.ok) { toast('Excluído'); row.remove(); } else toast('Erro ao excluir', 'err');
+        if (await delFile(n)) { toast('Excluído'); selected.delete(n); row.remove(); updateSelBar(); }
+        else toast('Erro ao excluir', 'err');
       };
       return row;
     }
+
+    async function delFile(name) {
+      const r = await fetch(`${API}/delete`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
+      return r.ok;
+    }
+
+    function updateSelBar() {
+      const total = document.querySelectorAll('.rowcheck').length;
+      const count = selected.size;
+      $('#sel-count').textContent = count ? `${count} selecionado${count > 1 ? 's' : ''}` : 'Selecionar tudo';
+      $('#sel-actions').classList.toggle('hidden', count === 0);
+      $('#sel-actions').classList.toggle('flex', count > 0);
+      const all = $('#sel-all');
+      all.checked = count > 0 && count === total;
+      all.indeterminate = count > 0 && count < total;
+    }
+
+    $('#sel-all').onchange = (e) => {
+      const on = e.target.checked;
+      document.querySelectorAll('.rowcheck').forEach(c => { if (c.checked !== on) c.click(); });
+    };
+
+    // baixa os selecionados em sequência (cada um dispara um <a download>)
+    $('#sel-dl').onclick = async () => {
+      const names = [...selected];
+      if (!names.length) return;
+      toast(`Baixando ${names.length} arquivo${names.length > 1 ? 's' : ''}…`);
+      for (const n of names) {
+        const a = document.createElement('a');
+        a.href = `/downloads/${encodeURIComponent(n)}`;
+        a.download = n;
+        document.body.appendChild(a); a.click(); a.remove();
+        await new Promise(r => setTimeout(r, 600)); // evita bloqueio do navegador
+      }
+    };
+
+    $('#sel-del').onclick = async () => {
+      const names = [...selected];
+      if (!names.length) return;
+      if (!confirm(`Excluir ${names.length} arquivo${names.length > 1 ? 's' : ''}?`)) return;
+      const results = await Promise.all(names.map(delFile));
+      const ok = results.filter(Boolean).length;
+      toast(ok === names.length ? `${ok} excluído${ok > 1 ? 's' : ''}` : `${ok}/${names.length} excluídos`, ok ? 'ok' : 'err');
+      loadFiles();
+    };
+
     $('#refresh').onclick = loadFiles;
 
     /* ---------- cookies ---------- */
