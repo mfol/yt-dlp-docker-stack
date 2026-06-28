@@ -1,65 +1,52 @@
 <!DOCTYPE html>
-<html lang="pt-br" class="dark">
+<html lang="pt-br">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#0b1020" />
+  <meta name="theme-color" content="#f6f7f9" />
   <title>Video Downloader</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class',
       theme: {
         extend: {
           fontFamily: { sans: ['Inter', 'sans-serif'] },
           colors: {
-            ink: { 900: '#070b18', 800: '#0b1020', 700: '#121931', 600: '#1b2440' },
-            brand: { 400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed' },
-            cyan2: { 400: '#22d3ee', 500: '#06b6d4' },
+            paper: '#f6f7f9',
+            sky2: { 100: '#e0f2fe', 300: '#7dd3fc', 400: '#56c2f0', 500: '#38b6e8' },
           },
-          boxShadow: { glow: '0 0 0 1px rgba(139,92,246,.25), 0 20px 60px -20px rgba(124,58,237,.5)' },
-          keyframes: {
-            shimmer: { '100%': { transform: 'translateX(100%)' } },
-            pop: { '0%': { transform: 'scale(.96)', opacity: 0 }, '100%': { transform: 'scale(1)', opacity: 1 } },
-          },
-          animation: { pop: 'pop .2s ease-out' },
+          keyframes: { pop: { '0%': { opacity: 0, transform: 'translateY(4px)' }, '100%': { opacity: 1, transform: 'none' } } },
+          animation: { pop: 'pop .18s ease-out' },
         },
       },
     };
   </script>
   <style>
     body { -webkit-tap-highlight-color: transparent; }
-    .glass { background: rgba(18,25,49,.7); backdrop-filter: blur(14px); }
-    .aurora { background:
-        radial-gradient(60% 50% at 15% 0%, rgba(124,58,237,.35), transparent 60%),
-        radial-gradient(50% 50% at 95% 10%, rgba(6,182,212,.25), transparent 60%),
-        radial-gradient(60% 60% at 50% 110%, rgba(168,85,247,.18), transparent 60%); }
-    .bar::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);
-      transform:translateX(-100%); animation:shimmer 1.4s infinite; }
-    input::placeholder { color:#5b6786; }
-    ::-webkit-scrollbar { height:8px; width:8px; } ::-webkit-scrollbar-thumb { background:#26314f; border-radius:8px; }
+    input::placeholder, textarea::placeholder { color: #9aa3b2; }
+    ::-webkit-scrollbar { height: 8px; width: 8px; } ::-webkit-scrollbar-thumb { background: #d8dce3; border-radius: 8px; }
   </style>
 </head>
 
-<body class="min-h-[100dvh] bg-ink-900 text-slate-100 font-sans aurora">
-  <div class="mx-auto w-full max-w-3xl px-4 pb-24 pt-[max(1.5rem,env(safe-area-inset-top))]">
+<body class="min-h-[100dvh] bg-paper text-slate-800 font-sans">
+  <div class="mx-auto w-full max-w-2xl px-4 pb-24 pt-[max(1.5rem,env(safe-area-inset-top))]">
 
     <!-- Header -->
     <header class="mb-6 flex items-center gap-3">
-      <div class="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-brand-500 to-cyan2-500 shadow-glow">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <div class="grid h-10 w-10 place-items-center rounded-2xl bg-sky2-300">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       </div>
       <div>
-        <h1 class="text-xl font-extrabold tracking-tight sm:text-2xl">Video Downloader</h1>
+        <h1 class="text-lg font-bold tracking-tight sm:text-xl">Video Downloader</h1>
         <p class="text-xs text-slate-400">YouTube · TikTok · Instagram</p>
       </div>
     </header>
 
     <!-- Tabs -->
-    <div class="mb-5 grid grid-cols-3 gap-1 rounded-2xl bg-ink-700/60 p-1 ring-1 ring-white/5">
+    <div class="mb-5 grid grid-cols-3 gap-1 rounded-2xl border border-slate-200 bg-white p-1">
       <button data-tab="dl" class="tab rounded-xl py-2.5 text-sm font-semibold transition">Baixar</button>
       <button data-tab="ck" class="tab rounded-xl py-2.5 text-sm font-semibold transition">Cookies</button>
       <button data-tab="mn" class="tab rounded-xl py-2.5 text-sm font-semibold transition">Manual</button>
@@ -67,29 +54,29 @@
 
     <!-- ===================== TAB: DOWNLOAD ===================== -->
     <section id="tab-dl">
-      <div class="glass rounded-3xl p-4 ring-1 ring-white/10 shadow-glow sm:p-6">
-        <label class="mb-2 block text-xs font-medium text-slate-400">Link do vídeo</label>
+      <div class="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+        <label class="mb-2 block text-xs font-medium text-slate-500">Link do vídeo</label>
         <input id="url" type="url" inputmode="url" autocomplete="off" placeholder="Cole o link aqui…"
-          class="w-full rounded-2xl border border-white/10 bg-ink-800/80 px-4 py-3.5 text-base outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30" />
+          class="w-full rounded-xl border border-slate-200 bg-paper px-4 py-3 text-base outline-none transition focus:border-sky2-400 focus:bg-white focus:ring-2 focus:ring-sky2-100" />
 
         <div class="mt-3 grid grid-cols-2 gap-2">
-          <button data-fmt="mp4" class="fmt rounded-2xl border border-white/10 py-3 text-sm font-semibold transition">🎬 MP4 vídeo</button>
-          <button data-fmt="mp3" class="fmt rounded-2xl border border-white/10 py-3 text-sm font-semibold transition">🎵 MP3 áudio</button>
+          <button data-fmt="mp4" class="fmt rounded-xl border py-3 text-sm font-semibold transition">🎬 MP4 vídeo</button>
+          <button data-fmt="mp3" class="fmt rounded-xl border py-3 text-sm font-semibold transition">🎵 MP3 áudio</button>
         </div>
 
         <button id="go"
-          class="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-brand-600 to-cyan2-500 py-3.5 text-base font-bold transition active:scale-[.98] disabled:opacity-50">
-          <span>Baixar agora</span>
+          class="mt-3 w-full rounded-xl bg-sky2-400 py-3 text-base font-semibold text-white transition hover:bg-sky2-500 active:scale-[.99] disabled:opacity-50">
+          Baixar agora
         </button>
 
         <!-- progress -->
-        <div id="prog" class="mt-4 hidden animate-pop rounded-2xl border border-white/10 bg-ink-800/60 p-4">
+        <div id="prog" class="mt-4 hidden animate-pop rounded-xl border border-slate-200 bg-paper p-4">
           <div class="mb-2 flex items-center justify-between text-sm">
-            <span id="prog-status" class="rounded-full bg-brand-600/30 px-2.5 py-0.5 text-xs font-semibold text-brand-400">Aguardando…</span>
-            <span id="prog-pct" class="font-bold">0%</span>
+            <span id="prog-status" class="rounded-full bg-sky2-100 px-2.5 py-0.5 text-xs font-semibold text-sky-700">Aguardando…</span>
+            <span id="prog-pct" class="font-bold text-slate-700">0%</span>
           </div>
-          <div class="relative h-2.5 overflow-hidden rounded-full bg-ink-900">
-            <div id="prog-bar" class="bar relative h-full w-0 rounded-full bg-gradient-to-r from-brand-500 to-cyan2-400 transition-all duration-300"></div>
+          <div class="h-2 overflow-hidden rounded-full bg-slate-200">
+            <div id="prog-bar" class="h-full w-0 rounded-full bg-sky2-400 transition-all duration-300"></div>
           </div>
           <p id="prog-line" class="mt-2 truncate text-xs text-slate-400"></p>
         </div>
@@ -97,8 +84,8 @@
 
       <!-- files -->
       <div class="mt-6 flex items-center justify-between">
-        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">Downloads recentes</h2>
-        <button id="refresh" class="rounded-xl p-2 text-slate-400 ring-1 ring-white/10 transition hover:text-white">
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Downloads recentes</h2>
+        <button id="refresh" class="rounded-lg border border-slate-200 bg-white p-2 text-slate-400 transition hover:text-slate-700">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/></svg>
         </button>
       </div>
@@ -107,7 +94,7 @@
 
     <!-- ===================== TAB: COOKIES ===================== -->
     <section id="tab-ck" class="hidden">
-      <p class="mb-4 rounded-2xl border border-brand-500/20 bg-brand-600/10 p-3 text-xs leading-relaxed text-slate-300">
+      <p class="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-800">
         Cookie expirado = download falha. Exporte com a extensão
         <b>“Get cookies.txt LOCALLY”</b> (formato Netscape), cole abaixo e salve. Sem redeploy.
       </p>
@@ -115,82 +102,78 @@
     </section>
 
     <!-- ===================== TAB: MANUAL ===================== -->
-    <section id="tab-mn" class="hidden space-y-4 text-sm leading-relaxed text-slate-300">
+    <section id="tab-mn" class="hidden space-y-4 text-sm leading-relaxed text-slate-600">
 
-      <!-- como funciona -->
-      <article class="rounded-3xl border border-white/10 bg-ink-700/50 p-4">
-        <h3 class="mb-2 flex items-center gap-2 font-bold text-white">
-          <span class="grid h-6 w-6 place-items-center rounded-lg bg-brand-600/30 text-xs">1</span>Como funciona</h3>
-        <p>Você cola um link, o servidor enfileira um <b>job</b> e o <code class="rounded bg-ink-900 px-1.5 py-0.5 text-xs text-brand-400">yt-dlp</code> baixa o arquivo. O progresso chega em tempo real (SSE) e o arquivo aparece em <b>Downloads recentes</b>.</p>
-        <ol class="mt-3 space-y-1.5 text-slate-400">
-          <li><span class="text-brand-400">▸</span> Frontend (esta página, Tailwind) → fala com a API sob <code class="rounded bg-ink-900 px-1 text-xs">/api</code>.</li>
-          <li><span class="text-brand-400">▸</span> API Flask enfileira o job e roda até <b>2 downloads em paralelo</b>.</li>
-          <li><span class="text-brand-400">▸</span> Arquivos salvos no volume <code class="rounded bg-ink-900 px-1 text-xs">/downloads</code>.</li>
+      <article class="rounded-2xl border border-slate-200 bg-white p-4">
+        <h3 class="mb-2 flex items-center gap-2 font-semibold text-slate-800">
+          <span class="grid h-6 w-6 place-items-center rounded-lg bg-sky2-100 text-xs text-sky-700">1</span>Como funciona</h3>
+        <p>Você cola um link, o servidor enfileira um <b>job</b> e o <code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-700">yt-dlp</code> baixa o arquivo. O progresso chega em tempo real (SSE) e o arquivo aparece em <b>Downloads recentes</b>.</p>
+        <ol class="mt-3 space-y-1.5 text-slate-500">
+          <li><span class="text-sky2-400">▸</span> Frontend (esta página, Tailwind) → fala com a API sob <code class="rounded bg-slate-100 px-1 text-xs">/api</code>.</li>
+          <li><span class="text-sky2-400">▸</span> API Flask enfileira o job e roda até <b>2 downloads em paralelo</b>.</li>
+          <li><span class="text-sky2-400">▸</span> Arquivos salvos no volume <code class="rounded bg-slate-100 px-1 text-xs">/downloads</code>.</li>
         </ol>
       </article>
 
-      <!-- urls -->
-      <article class="rounded-3xl border border-white/10 bg-ink-700/50 p-4">
-        <h3 class="mb-2 flex items-center gap-2 font-bold text-white">
-          <span class="grid h-6 w-6 place-items-center rounded-lg bg-brand-600/30 text-xs">2</span>URLs suportadas</h3>
+      <article class="rounded-2xl border border-slate-200 bg-white p-4">
+        <h3 class="mb-2 flex items-center gap-2 font-semibold text-slate-800">
+          <span class="grid h-6 w-6 place-items-center rounded-lg bg-sky2-100 text-xs text-sky-700">2</span>URLs suportadas</h3>
         <p>Cole o link direto do vídeo. A plataforma é detectada pelo domínio:</p>
         <ul class="mt-3 space-y-1.5">
-          <li>🔴 <b>YouTube</b> — <code class="rounded bg-ink-900 px-1 text-xs">youtube.com/watch?v=…</code>, <code class="rounded bg-ink-900 px-1 text-xs">youtu.be/…</code>, Shorts</li>
-          <li>⚫ <b>TikTok</b> — <code class="rounded bg-ink-900 px-1 text-xs">tiktok.com/@user/video/…</code></li>
-          <li>🟣 <b>Instagram</b> — <code class="rounded bg-ink-900 px-1 text-xs">instagram.com/p/…</code>, Reels</li>
+          <li>🔴 <b>YouTube</b> — <code class="rounded bg-slate-100 px-1 text-xs">youtube.com/watch?v=…</code>, <code class="rounded bg-slate-100 px-1 text-xs">youtu.be/…</code>, Shorts</li>
+          <li>⚫ <b>TikTok</b> — <code class="rounded bg-slate-100 px-1 text-xs">tiktok.com/@user/video/…</code></li>
+          <li>🟣 <b>Instagram</b> — <code class="rounded bg-slate-100 px-1 text-xs">instagram.com/p/…</code>, Reels</li>
         </ul>
-        <p class="mt-3 text-slate-400"><b>Formato:</b> <b>MP4</b> = melhor vídeo+áudio (merge). <b>MP3</b> = só áudio extraído. Playlists são ignoradas (baixa só 1 item).</p>
+        <p class="mt-3 text-slate-500"><b>Formato:</b> <b>MP4</b> = melhor vídeo+áudio (merge). <b>MP3</b> = só áudio extraído. Playlists são ignoradas (baixa só 1 item).</p>
       </article>
 
-      <!-- cookies -->
-      <article class="rounded-3xl border border-white/10 bg-ink-700/50 p-4">
-        <h3 class="mb-2 flex items-center gap-2 font-bold text-white">
-          <span class="grid h-6 w-6 place-items-center rounded-lg bg-brand-600/30 text-xs">3</span>Cookies (quando dá erro)</h3>
-        <p>Vídeos com login, idade ou anti-bot exigem cookies da sua conta. Cookie expirado = download falha. Renove pela aba <button class="link font-semibold text-brand-400 underline" data-goto="ck">Cookies</button> — sem redeploy.</p>
-        <ol class="mt-3 space-y-1.5 text-slate-400">
-          <li><b class="text-slate-200">1.</b> Instale a extensão <b>“Get cookies.txt LOCALLY”</b> (Chrome/Firefox).</li>
-          <li><b class="text-slate-200">2.</b> Logado na plataforma, exporte no formato <b>Netscape</b>.</li>
-          <li><b class="text-slate-200">3.</b> Aba Cookies → cole/anexe no card → <b>Salvar</b> → <b>Testar</b>.</li>
+      <article class="rounded-2xl border border-slate-200 bg-white p-4">
+        <h3 class="mb-2 flex items-center gap-2 font-semibold text-slate-800">
+          <span class="grid h-6 w-6 place-items-center rounded-lg bg-sky2-100 text-xs text-sky-700">3</span>Cookies (quando dá erro)</h3>
+        <p>Vídeos com login, idade ou anti-bot exigem cookies da sua conta. Cookie expirado = download falha. Renove pela aba <button class="font-semibold text-sky-600 underline" data-goto="ck">Cookies</button> — sem redeploy.</p>
+        <ol class="mt-3 space-y-1.5 text-slate-500">
+          <li><b class="text-slate-700">1.</b> Instale a extensão <b>“Get cookies.txt LOCALLY”</b> (Chrome/Firefox).</li>
+          <li><b class="text-slate-700">2.</b> Logado na plataforma, exporte no formato <b>Netscape</b>.</li>
+          <li><b class="text-slate-700">3.</b> Aba Cookies → cole/anexe no card → <b>Salvar</b> → <b>Testar</b>.</li>
         </ol>
-        <p class="mt-3 rounded-xl border border-white/5 bg-ink-900/60 p-2.5 text-xs text-slate-400">A bolinha indica saúde: <span class="text-emerald-400">●</span> ativo · <span class="text-amber-400">●</span> expira em ≤7 dias · <span class="text-rose-400">●</span> expirado. Cookies são segredos: ficam no volume <code class="rounded bg-ink-900 px-1">/cookies</code>, fora do git.</p>
+        <p class="mt-3 rounded-xl border border-slate-200 bg-paper p-2.5 text-xs text-slate-500">A bolinha indica saúde: <span class="text-emerald-500">●</span> ativo · <span class="text-amber-500">●</span> expira em ≤7 dias · <span class="text-rose-500">●</span> expirado. Cookies são segredos: ficam no volume <code class="rounded bg-slate-100 px-1">/cookies</code>, fora do git.</p>
       </article>
 
-      <!-- apis -->
-      <article class="rounded-3xl border border-white/10 bg-ink-700/50 p-4">
-        <h3 class="mb-2 flex items-center gap-2 font-bold text-white">
-          <span class="grid h-6 w-6 place-items-center rounded-lg bg-brand-600/30 text-xs">4</span>APIs</h3>
-        <p class="mb-2 text-slate-400">Tudo sob <code class="rounded bg-ink-900 px-1 text-xs">/api</code>. Exemplo:</p>
-        <pre class="mb-3 overflow-x-auto rounded-xl bg-ink-900 p-3 text-xs text-cyan2-400"><code>curl -X POST /api/download \
+      <article class="rounded-2xl border border-slate-200 bg-white p-4">
+        <h3 class="mb-2 flex items-center gap-2 font-semibold text-slate-800">
+          <span class="grid h-6 w-6 place-items-center rounded-lg bg-sky2-100 text-xs text-sky-700">4</span>APIs</h3>
+        <p class="mb-2 text-slate-500">Tudo sob <code class="rounded bg-slate-100 px-1 text-xs">/api</code>. Exemplo:</p>
+        <pre class="mb-3 overflow-x-auto rounded-xl border border-slate-200 bg-paper p-3 text-xs text-slate-700"><code>curl -X POST /api/download \
   -H "Content-Type: application/json" \
   -d '{"url":"https://youtu.be/ID","format":"mp4"}'</code></pre>
 
-        <p class="mb-1.5 text-xs font-bold uppercase tracking-wider text-emerald-400">Recomendadas</p>
-        <div class="space-y-1 font-mono text-xs">
-          <div><span class="text-cyan2-400">GET</span> /api/healthz <span class="text-slate-500">— status + versão</span></div>
-          <div><span class="text-amber-400">POST</span> /api/download <span class="text-slate-500">— {url,format} → job_id</span></div>
-          <div><span class="text-cyan2-400">GET</span> /api/jobs<span class="text-slate-500">[/&lt;id&gt;] — lista/1 job</span></div>
-          <div><span class="text-cyan2-400">GET</span> /api/jobs/&lt;id&gt;/events <span class="text-slate-500">— SSE progresso</span></div>
-          <div><span class="text-cyan2-400">GET</span> /api/files <span class="text-slate-500">— lista arquivos</span></div>
-          <div><span class="text-rose-400">DELETE</span> /api/files/&lt;nome&gt; <span class="text-slate-500">— apaga</span></div>
-          <div><span class="text-cyan2-400">GET</span> /api/cookies <span class="text-slate-500">— saúde dos cookies</span></div>
-          <div><span class="text-violet-400">PUT</span> /api/cookies/&lt;plat&gt; <span class="text-slate-500">— salva cookie</span></div>
-          <div><span class="text-amber-400">POST</span> /api/cookies/&lt;plat&gt;/test <span class="text-slate-500">— valida</span></div>
+        <p class="mb-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-600">Recomendadas</p>
+        <div class="space-y-1 font-mono text-xs text-slate-600">
+          <div><span class="text-sky-600">GET</span> /api/healthz <span class="text-slate-400">— status + versão</span></div>
+          <div><span class="text-amber-600">POST</span> /api/download <span class="text-slate-400">— {url,format} → job_id</span></div>
+          <div><span class="text-sky-600">GET</span> /api/jobs<span class="text-slate-400">[/&lt;id&gt;] — lista/1 job</span></div>
+          <div><span class="text-sky-600">GET</span> /api/jobs/&lt;id&gt;/events <span class="text-slate-400">— SSE progresso</span></div>
+          <div><span class="text-sky-600">GET</span> /api/files <span class="text-slate-400">— lista arquivos</span></div>
+          <div><span class="text-rose-600">DELETE</span> /api/files/&lt;nome&gt; <span class="text-slate-400">— apaga</span></div>
+          <div><span class="text-sky-600">GET</span> /api/cookies <span class="text-slate-400">— saúde dos cookies</span></div>
+          <div><span class="text-violet-600">PUT</span> /api/cookies/&lt;plat&gt; <span class="text-slate-400">— salva cookie</span></div>
+          <div><span class="text-amber-600">POST</span> /api/cookies/&lt;plat&gt;/test <span class="text-slate-400">— valida</span></div>
         </div>
 
-        <p class="mb-1.5 mt-3 text-xs font-bold uppercase tracking-wider text-slate-500">Legadas <span class="font-normal normal-case">(funcionam, header <code class="rounded bg-ink-900 px-1">Deprecation</code>)</span></p>
-        <div class="space-y-1 font-mono text-xs text-slate-500">
+        <p class="mb-1.5 mt-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Legadas <span class="font-normal normal-case">(funcionam, header <code class="rounded bg-slate-100 px-1">Deprecation</code>)</span></p>
+        <div class="space-y-1 font-mono text-xs text-slate-400">
           <div>POST /api/download · GET /api/progress · GET /api/files</div>
           <div>GET /api/download-file/&lt;nome&gt; · POST /api/delete</div>
         </div>
       </article>
 
-      <p class="pb-2 text-center text-xs text-slate-500">Detalhes técnicos completos no <code class="rounded bg-ink-900 px-1">README.md</code></p>
+      <p class="pb-2 text-center text-xs text-slate-400">Detalhes técnicos completos no <code class="rounded bg-slate-100 px-1">README.md</code></p>
     </section>
   </div>
 
   <!-- toast -->
   <div id="toast" class="pointer-events-none fixed inset-x-0 bottom-[max(1rem,env(safe-area-inset-bottom))] z-50 flex justify-center px-4 opacity-0 transition">
-    <div id="toast-box" class="rounded-2xl px-4 py-2.5 text-sm font-medium shadow-glow ring-1 ring-white/10"></div>
+    <div id="toast-box" class="rounded-xl border px-4 py-2.5 text-sm font-medium shadow-sm"></div>
   </div>
 
   <script>
@@ -203,8 +186,10 @@
     function toast(msg, kind = 'ok') {
       const box = $('#toast-box');
       box.textContent = msg;
-      box.className = 'rounded-2xl px-4 py-2.5 text-sm font-medium shadow-glow ring-1 ring-white/10 ' +
-        (kind === 'err' ? 'bg-rose-600 text-white' : kind === 'warn' ? 'bg-amber-500 text-black' : 'bg-emerald-600 text-white');
+      box.className = 'rounded-xl border px-4 py-2.5 text-sm font-medium shadow-sm ' +
+        (kind === 'err' ? 'border-rose-200 bg-rose-50 text-rose-700'
+          : kind === 'warn' ? 'border-amber-200 bg-amber-50 text-amber-800'
+            : 'border-emerald-200 bg-emerald-50 text-emerald-700');
       $('#toast').style.opacity = '1';
       clearTimeout(toast._t); toast._t = setTimeout(() => $('#toast').style.opacity = '0', 2600);
     }
@@ -214,7 +199,7 @@
       document.querySelectorAll('.tab').forEach(b => {
         const on = b.dataset.tab === name;
         b.className = 'tab rounded-xl py-2.5 text-sm font-semibold transition ' +
-          (on ? 'bg-gradient-to-r from-brand-600 to-cyan2-500 text-white shadow' : 'text-slate-400');
+          (on ? 'bg-sky2-400 text-white' : 'text-slate-500 hover:text-slate-800');
       });
       $('#tab-dl').classList.toggle('hidden', name !== 'dl');
       $('#tab-ck').classList.toggle('hidden', name !== 'ck');
@@ -229,8 +214,8 @@
       fmt = v;
       document.querySelectorAll('.fmt').forEach(b => {
         const on = b.dataset.fmt === v;
-        b.className = 'fmt rounded-2xl border py-3 text-sm font-semibold transition ' +
-          (on ? 'border-brand-500 bg-brand-600/20 text-white' : 'border-white/10 text-slate-300');
+        b.className = 'fmt rounded-xl border py-3 text-sm font-semibold transition ' +
+          (on ? 'border-sky2-400 bg-sky2-100 text-sky-700' : 'border-slate-200 bg-white text-slate-500');
       });
     }
     document.querySelectorAll('.fmt').forEach(b => b.onclick = () => setFmt(b.dataset.fmt));
@@ -292,7 +277,7 @@
         }));
         metas.sort((a, b) => new Date(b.date) - new Date(a.date));
         const box = $('#files'); box.innerHTML = '';
-        if (!metas.length) { box.innerHTML = '<p class="rounded-2xl border border-white/5 bg-ink-700/40 p-4 text-center text-sm text-slate-500">Nenhum arquivo ainda</p>'; return; }
+        if (!metas.length) { box.innerHTML = '<p class="rounded-xl border border-slate-200 bg-white p-4 text-center text-sm text-slate-400">Nenhum arquivo ainda</p>'; return; }
         metas.forEach(m => box.appendChild(fileRow(m)));
       } catch { toast('Erro ao listar', 'err'); }
     }
@@ -300,12 +285,12 @@
     function fileRow({ n, size, date }) {
       const mb = size ? (size / 1048576).toFixed(1) + ' MB' : '--';
       const dt = date ? new Date(date).toLocaleString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
-      const row = el(`<div class="flex items-center gap-3 rounded-2xl border border-white/5 bg-ink-700/40 p-3">
-        <div class="min-w-0 flex-1"><p class="truncate text-sm font-medium">${n}</p>
-        <p class="text-xs text-slate-500">${mb} · ${dt}</p></div>
-        <a href="/downloads/${encodeURIComponent(n)}" download class="grid h-9 w-9 place-items-center rounded-xl ring-1 ring-white/10 text-slate-300 hover:text-emerald-400 hover:ring-emerald-400/40">
+      const row = el(`<div class="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3">
+        <div class="min-w-0 flex-1"><p class="truncate text-sm font-medium text-slate-700">${n}</p>
+        <p class="text-xs text-slate-400">${mb} · ${dt}</p></div>
+        <a href="/downloads/${encodeURIComponent(n)}" download class="grid h-9 w-9 place-items-center rounded-lg border border-slate-200 text-slate-500 hover:border-emerald-300 hover:text-emerald-600">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>
-        <button class="del grid h-9 w-9 place-items-center rounded-xl ring-1 ring-white/10 text-slate-300 hover:text-rose-400 hover:ring-rose-400/40">
+        <button class="del grid h-9 w-9 place-items-center rounded-lg border border-slate-200 text-slate-500 hover:border-rose-300 hover:text-rose-600">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
       </div>`);
       row.querySelector('.del').onclick = async () => {
@@ -335,22 +320,22 @@
     function cookieCard(c) {
       const h = HEALTH[c.health] || HEALTH.missing;
       const days = c.days_left != null ? `${c.days_left} dias restantes` : (c.present ? 'sem expiração detectada' : '');
-      const card = el(`<div class="rounded-3xl border border-white/10 bg-ink-700/50 p-4">
+      const card = el(`<div class="rounded-2xl border border-slate-200 bg-white p-4">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2.5">
-            <span class="h-2.5 w-2.5 rounded-full bg-${h.c}-400 shadow-[0_0_10px] shadow-${h.c}-400/60"></span>
-            <div><p class="font-bold">${c.label}</p>
-            <p class="text-xs text-${h.c}-400">${h.t}${days ? ' · ' + days : ''}</p></div>
+            <span class="h-2.5 w-2.5 rounded-full bg-${h.c}-500"></span>
+            <div><p class="font-semibold text-slate-800">${c.label}</p>
+            <p class="text-xs text-${h.c}-600">${h.t}${days ? ' · ' + days : ''}</p></div>
           </div>
-          <button class="toggle rounded-xl px-3 py-1.5 text-xs font-semibold ring-1 ring-white/10 text-slate-300">Atualizar</button>
+          <button class="toggle rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50">Atualizar</button>
         </div>
         <div class="editor mt-3 hidden">
-          <textarea class="ta h-28 w-full resize-none rounded-2xl border border-white/10 bg-ink-900 p-3 font-mono text-xs outline-none focus:border-brand-500" placeholder="# Netscape HTTP Cookie File&#10;Cole aqui o conteúdo exportado…"></textarea>
+          <textarea class="ta h-28 w-full resize-none rounded-xl border border-slate-200 bg-paper p-3 font-mono text-xs text-slate-700 outline-none focus:border-sky2-400 focus:bg-white" placeholder="# Netscape HTTP Cookie File&#10;Cole aqui o conteúdo exportado…"></textarea>
           <div class="mt-2 flex gap-2">
-            <button class="save flex-1 rounded-xl bg-gradient-to-r from-brand-600 to-cyan2-500 py-2.5 text-sm font-bold active:scale-95">Salvar cookie</button>
-            <label class="grid cursor-pointer place-items-center rounded-xl px-3 ring-1 ring-white/10 text-xs text-slate-300">📎 Arquivo
+            <button class="save flex-1 rounded-lg bg-sky2-400 py-2.5 text-sm font-semibold text-white hover:bg-sky2-500 active:scale-95">Salvar cookie</button>
+            <label class="grid cursor-pointer place-items-center rounded-lg border border-slate-200 px-3 text-xs text-slate-600 hover:bg-slate-50">📎 Arquivo
               <input type="file" accept=".txt" class="hidden file"></label>
-            <button class="test rounded-xl px-3 ring-1 ring-white/10 text-xs text-slate-300">Testar</button>
+            <button class="test rounded-lg border border-slate-200 px-3 text-xs text-slate-600 hover:bg-slate-50">Testar</button>
           </div>
         </div>
       </div>`);
