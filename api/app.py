@@ -32,13 +32,15 @@ import json
 import uuid
 import queue
 import shutil
+import random
+import hashlib
 import logging
 import threading
 import subprocess
 from datetime import datetime, timezone
 
 from flask import (
-    Flask, request, jsonify, Response,
+    Flask, request, jsonify, Response, send_file,
     send_from_directory, abort, stream_with_context,
 )
 
@@ -58,8 +60,14 @@ MAX_WORKERS = int(os.getenv("MAX_WORKERS", "2"))
 CORS_ORIGINS = os.getenv("CORS_ORIGINS", "")  # "*" ou csv de origens; vazio = same-origin
 COOKIE_WARN_DAYS = int(os.getenv("COOKIE_WARN_DAYS", "7"))
 
+THUMBS_DIR = os.getenv("THUMBS_DIR", "/tmp/ytdlp-thumbs")
+
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 os.makedirs(COOKIES_DIR, exist_ok=True)
+os.makedirs(THUMBS_DIR, exist_ok=True)
+
+AUDIO_EXT = {".mp3", ".m4a", ".opus", ".aac", ".flac", ".ogg", ".wav"}
+VIDEO_EXT = {".mp4", ".mkv", ".webm", ".mov", ".avi", ".m4v", ".flv"}
 
 # Plataformas suportadas. Adicionar nova plataforma = 1 entrada aqui.
 PLATFORMS = {
@@ -629,6 +637,66 @@ def serve_download(name):
     if not os.path.isfile(path):
         abort(404)
     return send_from_directory(DOWNLOAD_DIR, name)
+
+
+# --------------------------------------------------------------------------- #
+# Thumbnails (frame aleatorio do meio p/ video; capa/waveform p/ audio)
+# --------------------------------------------------------------------------- #
+
+def _ffprobe_duration(path: str) -> float:
+    try:
+        out = subprocess.check_output(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "default=noprint_wrappers=1:nokey=1", path],
+            text=True, timeout=30).strip()
+        return float(out)
+    except Exception:  # noqa: BLE001
+        return 0.0
+
+
+def _gen_video_thumb(src: str, dst: str) -> bool:
+    """Extrai 1 frame aleatorio do miolo do video (entre 40% e 60% da duracao)."""
+    dur = _ffprobe_duration(src)
+    ts = random.uniform(dur * 0.4, dur * 0.6) if dur > 1 else 0.0
+    subprocess.run(
+        ["ffmpeg", "-y", "-ss", f"{ts:.3f}", "-i", src,
+         "-frames:v", "1", "-vf", "scale=480:-1", "-q:v", "3", dst],
+        capture_output=True, timeout=90)
+    return os.path.isfile(dst) and os.path.getsize(dst) > 0
+
+
+def _gen_audio_thumb(src: str, dst: str) -> bool:
+    """Capa embutida do MP3; se nao tiver, gera um waveform."""
+    # 1) capa embutida (attached picture)
+    subprocess.run(
+        ["ffmpeg", "-y", "-i", src, "-an", "-frames:v", "1", "-c:v", "mjpeg", dst],
+        capture_output=True, timeout=60)
+    if os.path.isfile(dst) and os.path.getsize(dst) > 0:
+        return True
+    # 2) fallback: waveform com a cor do tema
+    subprocess.run(
+        ["ffmpeg", "-y", "-i", src, "-filter_complex",
+         "showwavespic=s=480x270:colors=#38b6e8", "-frames:v", "1", dst],
+        capture_output=True, timeout=60)
+    return os.path.isfile(dst) and os.path.getsize(dst) > 0
+
+
+@dual("/thumb/<path:name>")
+def thumb(name):
+    src = safe_download_path(name)
+    if not os.path.isfile(src):
+        abort(404)
+    ext = os.path.splitext(name)[1].lower()
+    if ext not in VIDEO_EXT and ext not in AUDIO_EXT:
+        abort(404)
+
+    key = hashlib.sha1(f"{name}:{os.path.getmtime(src)}".encode()).hexdigest()
+    dst = os.path.join(THUMBS_DIR, key + ".jpg")
+    if not os.path.isfile(dst):
+        ok = _gen_video_thumb(src, dst) if ext in VIDEO_EXT else _gen_audio_thumb(src, dst)
+        if not ok:
+            abort(404)
+    return send_file(dst, mimetype="image/jpeg", max_age=86400)
 
 
 if __name__ == "__main__":
