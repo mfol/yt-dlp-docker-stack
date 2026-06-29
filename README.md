@@ -4,13 +4,19 @@ API Flask + frontend (Tailwind, mobile-first) para baixar video/audio com `yt-dl
 
 ## Destaques
 
-- **Frontend mobile-first** (Tailwind via CDN), tema escuro, 3 abas: **Baixar**, **Cookies** e **Manual**.
-- **Aba Manual embutida** — explica fluxo, URLs suportadas, cookies e todas as APIs direto na UI.
+- **Frontend mobile-first** (Tailwind via CDN), tema claro flat minimalista, 3 abas: **Baixar**, **Cookies** e **Manual**.
+- **Container self-contained** — o frontend e assado na imagem e servido pelo proprio Flask
+  em `/`. Cada rota da API responde em path bare **e** sob `/api` (funciona com ou sem proxy).
+- **Aba Manual embutida** — inicio rapido, fluxo, URLs, cookies, FAQ e APIs direto na UI.
 - **Gerenciador de cookies pela UI** — renove cookies sem redeploy. Mostra saude
   (ativo / expirando / expirado) e dias restantes por plataforma; cola texto ou
   envia arquivo `.txt`; botao **Testar** valida se o cookie ainda autentica.
 - **Jobs com ID + progresso por job** (SSE), multiplos downloads em paralelo (`MAX_WORKERS`).
-- **Seguranca**: path traversal bloqueado em download/delete, validacao de formato e cookie.
+- **Downloads recentes com multi-selecao** — baixar/excluir em lote e **selecionar tudo**.
+- **Compartilhamento** — Web Share API com o arquivo (abre WhatsApp, Instagram, etc. no
+  celular); fallback com WhatsApp / Telegram / copiar link.
+- **Thumbnails** — frame aleatorio do miolo do video; capa embutida ou waveform para audio.
+- **Seguranca**: path traversal bloqueado em download/delete/thumb, validacao de formato e cookie.
 - **APIs legadas mantidas** (clientes antigos seguem funcionando), marcadas com header `Deprecation`.
 
 ## Subir
@@ -19,7 +25,7 @@ API Flask + frontend (Tailwind, mobile-first) para baixar video/audio com `yt-dl
 docker compose up -d --build
 ```
 
-Frontend em `/`, API sob `/api` (via proxy). Health: `/healthz`.
+Frontend em `/`, API sob `/api` (e tambem em path bare). Arquivos em `/downloads/<nome>`. Health: `/healthz`.
 
 ## Cookies (a parte facil agora)
 
@@ -46,7 +52,9 @@ Plataformas: YouTube, TikTok, Instagram (adicionar mais = 1 entrada em `PLATFORM
 | GET | `/jobs/<id>` | 1 job |
 | GET | `/jobs/<id>/events` | SSE por job (emite `finished` / `error`) |
 | GET | `/files` | lista de arquivos |
+| GET / HEAD | `/downloads/<name>` | serve o arquivo (download + metadados) |
 | DELETE | `/files/<name>` | apaga arquivo |
+| GET | `/thumb/<name>` | thumbnail (frame do video / capa ou waveform do audio) |
 | GET | `/cookies` | status de todos os cookies |
 | PUT | `/cookies/<platform>` | salva cookie (texto cru, `{content}` json, ou multipart `file`) |
 | DELETE | `/cookies/<platform>` | remove cookie |
@@ -62,6 +70,7 @@ Plataformas: YouTube, TikTok, Instagram (adicionar mais = 1 entrada em `PLATFORM
 |-----|---------|-----------|
 | `DOWNLOAD_DIR` | `/downloads` | saida dos arquivos |
 | `COOKIES_DIR` | `/cookies` | cookies gerenciados (gravavel) |
+| `THUMBS_DIR` | `/tmp/ytdlp-thumbs` | cache das thumbnails (efemero) |
 | `MAX_WORKERS` | `2` | downloads simultaneos |
 | `COOKIE_WARN_DAYS` | `7` | dias p/ marcar cookie como "expirando" |
 | `CORS_ORIGINS` | (vazio) | `*` ou csv de origens permitidas |
