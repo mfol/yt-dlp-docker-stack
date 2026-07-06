@@ -1,5 +1,7 @@
 # yt-dlp Stack (Docker)
 
+**English** · [Português (BR)](README.pt-br.md)
+
 A Flask API + mobile-first frontend (Tailwind) to download video/audio with
 [**yt-dlp**](https://github.com/yt-dlp/yt-dlp), running in Docker.
 
