@@ -27,6 +27,28 @@ docker compose up -d --build
 
 Frontend em `/`, API sob `/api` (e tambem em path bare). Arquivos em `/downloads/<nome>`. Health: `/healthz`.
 
+## Build: publico vs interno
+
+O `Dockerfile` usa **defaults publicos** (`python:3.12-slim`, `pypi.org`, mirror Debian
+padrao) — qualquer um consegue buildar. Um build interno (atras de um proxy/registry como
+Nexus) sobrescreve via `--build-arg`:
+
+| ARG | Default publico | Exemplo interno |
+|-----|-----------------|-----------------|
+| `BASE_IMAGE` | `python:3.12-slim` | `docker-cache.exemplo.com/library/python:3.12-slim` |
+| `PIP_INDEX_URL` | `https://pypi.org/simple` | `https://nexus.exemplo.com/repository/pypi-proxy/simple` |
+| `APT_MIRROR` | *(vazio = mirror padrao)* | `https://nexus.exemplo.com/repository` |
+
+```bash
+# build interno
+BASE_IMAGE=... APT_MIRROR=... PIP_INDEX_URL=... docker compose build
+```
+
+No CI do Gitea (`.gitea/workflows/deploy.yml`) esses valores vem de **repo variables**
+(`BASE_IMAGE`, `APT_MIRROR`, `PIP_INDEX_URL`) — configure-as em Settings → Actions →
+Variables. Se nao existirem, o build cai no default publico. O CI do GitHub
+(`.github/workflows/build.yml`) so valida o build publico, sem publicar imagem.
+
 ## Cookies (a parte facil agora)
 
 1. Abra a aba **Cookies** na UI.

@@ -20,7 +20,16 @@ jobs:
 
       - name: Build image
         run: |
-          docker build -f api/Dockerfile -t "${{ secrets.REGISTRY_URL }}/packtudo/ytdlp-api:latest" .
+          # Valores internos vem de Gitea repo variables (nao ficam no codigo).
+          # Fallback publico se a variable nao existir -> build ainda funciona.
+          BASE_IMAGE="${{ vars.BASE_IMAGE }}";       BASE_IMAGE="${BASE_IMAGE:-python:3.12-slim}"
+          PIP_INDEX_URL="${{ vars.PIP_INDEX_URL }}"; PIP_INDEX_URL="${PIP_INDEX_URL:-https://pypi.org/simple}"
+          APT_MIRROR="${{ vars.APT_MIRROR }}"
+          docker build -f api/Dockerfile \
+            --build-arg BASE_IMAGE="$BASE_IMAGE" \
+            --build-arg PIP_INDEX_URL="$PIP_INDEX_URL" \
+            --build-arg APT_MIRROR="$APT_MIRROR" \
+            -t "${{ secrets.REGISTRY_URL }}/packtudo/ytdlp-api:latest" .
           docker tag "${{ secrets.REGISTRY_URL }}/packtudo/ytdlp-api:latest" "${{ secrets.REGISTRY_URL }}/packtudo/ytdlp-api:${{ gitea.sha }}"
 
       - name: Push image

@@ -3,6 +3,14 @@ services:
     build:
       context: .
       dockerfile: api/Dockerfile
+      args:
+        # defaults publicos; sobrescreva via env p/ build interno (Nexus):
+        #   BASE_IMAGE=docker-cache.packtudo.com/library/python:3.12-slim \
+        #   APT_MIRROR=https://pack-nexus.packtudo.com/repository \
+        #   PIP_INDEX_URL=https://pack-nexus.packtudo.com/repository/pypi-proxy/simple docker compose build
+        BASE_IMAGE: ${BASE_IMAGE:-python:3.12-slim}
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
+        APT_MIRROR: ${APT_MIRROR:-}
     environment:
       DOWNLOAD_DIR: /downloads
       COOKIES_DIR: /cookies
