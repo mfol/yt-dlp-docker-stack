@@ -125,3 +125,7 @@ This wrapper is released under the **MIT License** — see [LICENSE](LICENSE).
 
 yt-dlp and FFmpeg are separate projects invoked as external tools; they are **not** bundled
 here and keep their own licenses (The Unlicense and LGPL/GPL respectively).
+
+---
+
+<sub>This project was designed and built with the help of AI ([Claude](https://claude.com/claude-code)).</sub>

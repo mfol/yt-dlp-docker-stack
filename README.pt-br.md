@@ -125,3 +125,7 @@ Esta casca é distribuída sob a **Licença MIT** — veja [LICENSE](LICENSE).
 
 yt-dlp e FFmpeg são projetos separados, invocados como ferramentas externas; **não** são
 embutidos aqui e mantêm suas próprias licenças (The Unlicense e LGPL/GPL, respectivamente).
+
+---
+
+<sub>Este projeto foi concebido e desenvolvido com apoio de IA ([Claude](https://claude.com/claude-code)).</sub>
